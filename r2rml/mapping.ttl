@@ -1,15 +1,4 @@
-# 20kChallenge mapping from csv to triples
-#
-# Notes
-# -Parameters: patient, TNM, stage, date of diagnosis, date of last follow-up or death, vital status
-#
-# Version history:
-# -March 2017	Frank Dankers				adapted for duCAT from design Johan van Soest
-# -August 2017	Frank Dankers & Timo Deist	updated for duCAT/Erasmus
-# -June 2018	Andre Dekker				adapted for 20kChallenge and CSV data source
-# -August 2018	Frank Dankers				cleaned and updated for consistency in naming/comments
-# -June 2021	Aiara Lobo Gomes			adapted for CORAL
-
+# OPC-Radiomics knowledge model
 
 @prefix map: <http://mapping.local/>.
 @prefix rr: <http://www.w3.org/ns/r2rml#>.
@@ -26,10 +15,10 @@
 ############################################
 
 map:basicQuery a rr:LogicalTable;
-	rr:sqlQuery """SELECT id as id, t as t, n as n, m as m, stage as stage,
-    date_of_diagnosis as date_of_diagnosis, date_of_fu as date_of_fu,
-    vital_status as vital_status FROM data""";
-	skos:definition "id,t,n,m,stage,date_of_diagnosis,date_of_fu,vital_status".
+	rr:sqlQuery """SELECT ID as id, T as t, N as n, M as m, Stage as stage,
+    days_since_diagnosis as days_since_diagnosis, Status as vital_status
+    FROM data""";
+	skos:definition "id,t,n,m,stage,days_since_diagnosis,vital_status".
 
 ############################################
 # patient
@@ -80,14 +69,14 @@ map:disease a rr:TriplesMap;
 	rr:logicalTable map:basicQuery;
 	rr:subjectMap [
 		rr:template "patient/{id}/disease";
-		rr:class ncit:C2926;			# Non-Small Cell Lung Carcinoma
+		rr:class ncit:C9105;			# Oropharyngeal Carcinoma
 	];
 	rr:predicateObjectMap [
 		rr:predicate roo:P100025;		# has_stage
 		rr:objectMap [
 			rr:parentTriplesMap map:overallStage;
 			rr:joinCondition [
-				rr:child "id";			# TODO: see meaning of joinCondition
+				rr:child "id";
 				rr:parent "id";
 		   ];
 	   ];
@@ -121,17 +110,7 @@ map:disease a rr:TriplesMap;
 				rr:parent "id";
 			];
 		];
-	];
-    rr:predicateObjectMap [
-        rr:predicate roo:P100251;		# has_date_of_diagnosis
-        rr:objectMap [
-            rr:parentTriplesMap map:diagnosisDate;
-            rr:joinCondition [
-                rr:child "id";
-                rr:parent "id";
-            ];
-        ];
-    ].
+	].
 
 
 ############################################
@@ -139,7 +118,6 @@ map:disease a rr:TriplesMap;
 ############################################
 
 # define overallStage classmap
-# TODO: see with Johan or Matthijs when to use local_value or translation
 map:overallStage a rr:TriplesMap;
 	rr:logicalTable map:basicQuery;
 	rr:subjectMap [
@@ -216,26 +194,6 @@ map:clinM a rr:TriplesMap;
 
 
 ############################################
-# date of diagnosis
-############################################
-
-# define diagnosisDate classmap
-map:diagnosisDate a rr:TriplesMap;
-	rr:logicalTable map:basicQuery;
-	rr:subjectMap [
-		rr:template "patient/{id}/disease/date_of_diagnosis";
-		rr:class ncit:C25164;			# Date
-	];
-	rr:predicateObjectMap [
-		rr:predicate roo:local_value;
-		rr:objectMap [
-			rr:column "date_of_diagnosis";
-			rr:datatype xsd:date;       # TODO: or leave as string?
-		];
-	].
-
-
-############################################
 # vital status
 ############################################
 
@@ -251,35 +209,5 @@ map:vitalStatus a rr:TriplesMap;
         rr:objectMap [
             rr:column "vital_status";
             rr:datatype xsd:string;
-        ];
-    ];
-    rr:predicateObjectMap [
-        rr:predicate roo:P100228;		# has_date
-        rr:objectMap [
-            rr:parentTriplesMap map:vitalStatusDate;
-            rr:joinCondition [
-                rr:child "id";
-                rr:parent "id";
-            ];
-        ];
-    ].
-
-
-############################################
-# date of vital status
-############################################
-
-# define vitalStatusDate classmap
-map:vitalStatusDate a rr:TriplesMap;
-    rr:logicalTable map:basicQuery;
-    rr:subjectMap [
-        rr:template "patient/{id}/vital_status/date_of_fu";
-        rr:class ncit:C25164;			# Date
-    ];
-    rr:predicateObjectMap [
-        rr:predicate roo:local_value;
-        rr:objectMap [
-            rr:column "date_of_fu";
-            rr:datatype xsd:date;       # TODO: or leave as string?
         ];
     ].
